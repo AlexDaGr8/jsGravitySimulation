@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .container {
+            width: 90vw;
+            height: 90vh;
+            margin: 5vh 5vw;
+        }
+        canvas {
+            background: #777;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <button id="start">Start</button>
+        <button id="stop">Stop</button>
+        <canvas id="canvas"></canvas>
+    </div>
+    <script>
+        let anim = null;
+        let startBtn = document.getElementById('start')
+        startBtn.addEventListener('click', function() { 
+            console.log('started animation');
+            draw();
+        });
+        let stopBtn = document.getElementById('stop')
+        stopBtn.addEventListener('click', function() { 
+            console.log('canceling animation');
+            cancelAnimationFrame(anim);
+        });
+
+        let canvas = document.getElementById('canvas');
+        let ctx = canvas.getContext('2d');
+        let width = canvas.width = canvas.parentNode.clientWidth;
+        let height = canvas.height = canvas.parentNode.clientHeight;
+        let mouse = { x: 0, y: 0, isDown: false };
+        let newBall = null;
+        canvas.onmousedown = mouseDown;
+        canvas.onmousemove = getMousePosition;
+        canvas.onmouseup = mouseUp;
+
+        function getMousePosition(e) {
+            mouse.x = e.pageX - canvas.offsetLeft;
+            mouse.y = e.pageY - canvas.offsetTop;
+        }
+        function mouseDown(e) {
+            mouse.isDown = true;
+            getMousePosition(e);
+            if (newBall === null) {
+                newBall = new ball({ x: mouse.x, y: mouse.y}, { x: 0, y: 0 });
+            }
+        }
+        function mouseUp(e) {
+            newBall.velocity = {
+                x: (newBall.position.x - mouse.x) / 10,
+                y: (newBall.position.y - mouse.y) / 10
+            };
+            balls.push(newBall);
+            mouse.isDown = false;
+            newBall = null;
+        }
+
+        let frameRate = 1/60; // seconds
+        let frameDelay = frameRate * 1000; // ms
+
+        class ball {
+            constructor(position, velocity) {
+                this.position = position;
+                this.velocity = velocity;
+                this.mass = 0.1;
+                this.radius = 15;
+                this.restitution = -.7;
+                this.A = Math.PI * this.radius * this.radius / (10000);
+            }
+        }
+
+        let balls = [new ball({x: width/2,y: 0},{x: 10, y: 0})];
+        let physicsConsts = {
+            dragCoef: 0.47, // dimensionsless, 
+            rho: 1.22, // kg / m^3
+            A: null, // m^2 frontal area
+            gravity:  1.6, // m / s^2
+        }
+
+        function draw() {
+            ctx.clearRect(0,0,width,height);
+            for (let ball of balls) {
+                moveBall(ball);
+            }
+            if (mouse.isDown) {
+                circle(newBall.position.x, newBall.position.y, newBall.radius, 'green');
+                line(newBall.position, mouse);
+            }
+            anim = requestAnimationFrame(draw);
+        }
+
+        // do the physics
+        function moveBall(ball) {
+            // get drag forces
+            let Fx = getDragForce(ball.velocity.x, ball.a, physicsConsts);
+            let Fy = getDragForce(ball.velocity.y, ball.a, physicsConsts);
+
+            // calculate acceleration ( F = ma )
+            let ax = Fx / ball.mass;
+            // gravity added in
+            let ay = physicsConsts.gravity + (Fy / ball.mass);
+
+            // update velocitys 
+            ball.velocity.x += ax*frameRate;
+            ball.velocity.y += ay*frameRate;
+
+            // update ball position
+            ball.position.x += ball.velocity.x*frameRate*100;
+            ball.position.y += ball.velocity.y*frameRate*100;
+
+            // handle collisions
+            if (ball.position.y > height - ball.radius) {
+                ball.velocity.y *= ball.restitution;
+                ball.position.y = height - ball.radius;
+            }
+            if (ball.position.x > width - ball.radius) {
+                ball.velocity.x *= ball.restitution;
+                ball.position.x = width - ball.radius;
+            }
+            if (ball.position.x < ball.radius) {
+                ball.velocity.x *= ball.restitution;
+                ball.position.x = ball.radius;
+            }
+            circle(ball.position.x, ball.position.y, ball.radius,'blue');
+        }
+
+        function getDragForce(velocity, A, { dragCoef, rho }) {
+            // drag force: fd = -0.5 * cd * A * rho * v * v
+            let F = -0.5 * dragCoef * A * rho * velocity * velocity * velocity / Math.abs(velocity);
+            return isNaN(F) ? 0 : F;
+        }
+        function circle(x,y,r,fill) {
+            ctx.beginPath();
+            ctx.fillStyle = fill;
+            ctx.arc(x,y,r,0,2*Math.PI);
+            ctx.fill();
+            ctx.closePath();
+        }
+        function line(from,to) {
+            ctx.beginPath();
+            ctx.lineWidth = 2;
+            ctx.moveTo(from.x,from.y);
+            ctx.lineTo(to.x,to.y);
+            ctx.stroke();
+            ctx.closePath();
+        }
+    </script>
+</body>
+</html>
