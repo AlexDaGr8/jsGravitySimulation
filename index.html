@@ -5,34 +5,114 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
     <style>
+        :root {
+            --color-red: #D81159;
+            --color-green: #2CF6B3;
+            --color-black: #505168;
+            --color-white: #ECEBF3;
+            --color-blue: #8390FA;
+        }
+        body {
+            background-color: var(--color-black);
+            color: var(--color-white);
+        }
         .container {
             width: 90vw;
             height: 90vh;
             margin: 5vh 5vw;
+            display: grid;
+            grid-template-columns: 200px 1fr;
+            gap: 5px;
+        }
+        .button-group {
+            width: 100%;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 5px;
+        }
+        .button-group button {
+            text-decoration: none;
+            padding: 7px;
+            border: none;
+            border-radius: 2px;
+            appearance: none;
+            outline:none;
+            position: relative;
+            top: -1px;
+            left: 1px;
+            margin: 3px 1px;
+        }
+        .button-group button:active {
+            top: 0px;
+            left: -1px
+        }
+        .button-group button.green {
+            background-color: var(--color-green);
+        }
+        .button-group button.red {
+            background-color: var(--color-red);
+        }
+
+        .canvas {
+            width: 100%;
         }
         canvas {
-            background: #777;
+            background: var(--color-blue);
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <button id="start">Start</button>
-        <button id="stop">Stop</button>
-        <canvas id="canvas"></canvas>
+        <fieldset>
+            <legend>PHYSICS SON!!</legend>
+            <div class="button-group">
+                <button id="start" class="green">Start</button>
+                <button id="stop" class="red">Stop</button>
+            </div>
+            <label>How fast you fall: </label>
+            <input type="number" value="9.8" id="gravity" step="0.1">
+            <label>Bounciness: </label>
+            <input type="number" value="-0.7" id="bounce" step="0.1">
+            <label>Drag Coeffcient: </label>
+            <input type="number" value="0.47" id="drag" step="0.1">
+            <label>Fluid: </label>
+            <input type="number" value="1.22" id="fluid" step="0.1">
+        </fieldset>
+        <div class="canvas">
+            <canvas id="canvas"></canvas>
+        </div>
     </div>
     <script>
         let anim = null;
         let startBtn = document.getElementById('start')
         startBtn.addEventListener('click', function() { 
-            console.log('started animation');
-            draw();
+            console.log('started animation', anim);
+            if (!anim) { draw(); }
         });
         let stopBtn = document.getElementById('stop')
         stopBtn.addEventListener('click', function() { 
             console.log('canceling animation');
             cancelAnimationFrame(anim);
+            anim = null
         });
+        let gravity = document.getElementById('gravity');
+        gravity.addEventListener('change', function() {
+            physicsConsts.gravity = gravity.value;
+        })
+        let bounce = document.getElementById('bounce');
+        bounce.addEventListener('change', function() {
+            balls.forEach(ball => ball.restitution = bounce.value);
+        })
+        let drag = document.getElementById('drag');
+        drag.addEventListener('change', function() {
+            physicsConsts.dragCoef = drag.value;
+        })
+        let fluid = document.getElementById('fluid');
+        fluid.addEventListener('change', function() {
+            console.log(fluid.value)
+            physicsConsts.rho = fluid.value;
+        })
+
 
         let canvas = document.getElementById('canvas');
         let ctx = canvas.getContext('2d');
@@ -68,6 +148,11 @@
         let frameRate = 1/60; // seconds
         let frameDelay = frameRate * 1000; // ms
 
+        let physicsConsts = {
+            dragCoef: 0.47, // dimensionsless, 
+            rho: 1.22, // kg / m^3
+            gravity:  9.8, // m / s^2
+        }
         class ball {
             constructor(position, velocity) {
                 this.position = position;
@@ -80,12 +165,6 @@
         }
 
         let balls = [new ball({x: width/2,y: 0},{x: 10, y: 0})];
-        let physicsConsts = {
-            dragCoef: 0.47, // dimensionsless, 
-            rho: 1.22, // kg / m^3
-            A: null, // m^2 frontal area
-            gravity:  1.6, // m / s^2
-        }
 
         function draw() {
             ctx.clearRect(0,0,width,height);
