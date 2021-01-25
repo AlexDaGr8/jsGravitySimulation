@@ -86,7 +86,7 @@
         let anim = null;
         let startBtn = document.getElementById('start')
         startBtn.addEventListener('click', function() { 
-            console.log('started animation', anim);
+            console.log('started animation');
             if (!anim) { draw(); }
         });
         let stopBtn = document.getElementById('stop')
@@ -109,7 +109,6 @@
         })
         let fluid = document.getElementById('fluid');
         fluid.addEventListener('change', function() {
-            console.log(fluid.value)
             physicsConsts.rho = fluid.value;
         })
 
