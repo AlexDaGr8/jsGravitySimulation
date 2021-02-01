@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <fieldset>
+            <legend>Heavy Bois</legend>
+            <label>Mass of Added Planet</label>
+            <select id="masses-list">
+              <option value="0.000003003">Earth</option> 
+              <option value="0.0009543">Jupiter</option>
+              <option value="1">Sun</option>
+              <option value="0.1">Red Dwarf Star</option>
+            </select>
+            <button id="reset-button">Reset</button>
+            <!-- <div class="button-group">
+                <button id="start" class="green">Start</button>
+                <button id="stop" class="red">Stop</button>
+            </div>
+            <label>How fast you fall: </label>
+            <input type="number" id="gravity" step="0.1">
+            <label>Bounciness: </label>
+            <input type="number" id="bounce" step="0.1">
+            <label>Drag Coeffcient: </label>
+            <input type="number" id="drag" step="0.1">
+            <label>Fluid: </label>
+            <input type="number" id="fluid" step="0.1"> -->
+        </fieldset>
+        <div class="canvas">
+            <canvas id="canvas"></canvas>
+        </div>
+    </div>
+    <script src="./spaceSim.js" type="module"></script>
+</body>
+</html>

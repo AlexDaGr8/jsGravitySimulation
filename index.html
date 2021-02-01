@@ -4,62 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
-    <style>
-        :root {
-            --color-red: #D81159;
-            --color-green: #2CF6B3;
-            --color-black: #505168;
-            --color-white: #ECEBF3;
-            --color-blue: #8390FA;
-        }
-        body {
-            background-color: var(--color-black);
-            color: var(--color-white);
-        }
-        .container {
-            width: 90vw;
-            height: 90vh;
-            margin: 5vh 5vw;
-            display: grid;
-            grid-template-columns: 200px 1fr;
-            gap: 5px;
-        }
-        .button-group {
-            width: 100%;
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 5px;
-        }
-        .button-group button {
-            text-decoration: none;
-            padding: 7px;
-            border: none;
-            border-radius: 2px;
-            appearance: none;
-            outline:none;
-            position: relative;
-            top: -1px;
-            left: 1px;
-            margin: 3px 1px;
-        }
-        .button-group button:active {
-            top: 0px;
-            left: -1px
-        }
-        .button-group button.green {
-            background-color: var(--color-green);
-        }
-        .button-group button.red {
-            background-color: var(--color-red);
-        }
-
-        .canvas {
-            width: 100%;
-        }
-        canvas {
-            background: var(--color-blue);
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
@@ -70,13 +15,13 @@
                 <button id="stop" class="red">Stop</button>
             </div>
             <label>How fast you fall: </label>
-            <input type="number" value="9.8" id="gravity" step="0.1">
+            <input type="number" id="gravity" step="0.1">
             <label>Bounciness: </label>
-            <input type="number" value="-0.7" id="bounce" step="0.1">
+            <input type="number" id="bounce" step="0.1">
             <label>Drag Coeffcient: </label>
-            <input type="number" value="0.47" id="drag" step="0.1">
+            <input type="number" id="drag" step="0.1">
             <label>Fluid: </label>
-            <input type="number" value="1.22" id="fluid" step="0.1">
+            <input type="number" id="fluid" step="0.1">
         </fieldset>
         <div class="canvas">
             <canvas id="canvas"></canvas>
@@ -97,19 +42,19 @@
         });
         let gravity = document.getElementById('gravity');
         gravity.addEventListener('change', function() {
-            physicsConsts.gravity = gravity.value;
+            physicsConsts.gravity = +gravity.value;
         })
         let bounce = document.getElementById('bounce');
         bounce.addEventListener('change', function() {
-            balls.forEach(ball => ball.restitution = bounce.value);
+            balls.forEach(ball => ball.restitution = +bounce.value);
         })
         let drag = document.getElementById('drag');
         drag.addEventListener('change', function() {
-            physicsConsts.dragCoef = drag.value;
+            physicsConsts.dragCoef = +drag.value;
         })
         let fluid = document.getElementById('fluid');
         fluid.addEventListener('change', function() {
-            physicsConsts.rho = fluid.value;
+            physicsConsts.rho = +fluid.value;
         })
 
 
@@ -149,9 +94,12 @@
 
         let physicsConsts = {
             dragCoef: 0.47, // dimensionsless, 
-            rho: 1.22, // kg / m^3
+            rho: 1.22, // kg / m^3 - density
             gravity:  9.8, // m / s^2
         }
+        gravity.value = physicsConsts.gravity;
+        fluid.value = physicsConsts.rho;
+        drag.value = physicsConsts.dragCoef;
         class ball {
             constructor(position, velocity) {
                 this.position = position;
@@ -179,16 +127,17 @@
 
         // do the physics
         function moveBall(ball) {
+            console.log('------- drag forces -------')
             // get drag forces
-            let Fx = getDragForce(ball.velocity.x, ball.a, physicsConsts);
-            let Fy = getDragForce(ball.velocity.y, ball.a, physicsConsts);
+            let Fx = getDragForce(ball.velocity.x, ball.A, physicsConsts);
+            let Fy = getDragForce(ball.velocity.y, ball.A, physicsConsts);
 
             // calculate acceleration ( F = ma )
             let ax = Fx / ball.mass;
             // gravity added in
             let ay = physicsConsts.gravity + (Fy / ball.mass);
 
-            // update velocitys 
+            // update velocities 
             ball.velocity.x += ax*frameRate;
             ball.velocity.y += ay*frameRate;
 
@@ -213,8 +162,15 @@
         }
 
         function getDragForce(velocity, A, { dragCoef, rho }) {
+            console.log('A', A);
+            console.log('dragCoef', dragCoef);
+            console.log('rho', rho);
+            console.log('velocity', velocity);
+            console.log('velocity sign', (velocity / Math.abs(velocity)));
             // drag force: fd = -0.5 * cd * A * rho * v * v
-            let F = -0.5 * dragCoef * A * rho * velocity * velocity * velocity / Math.abs(velocity);
+            let F = -0.5 * dragCoef * A * rho * velocity * velocity * (velocity / Math.abs(velocity));
+            
+            console.log('F', F);
             return isNaN(F) ? 0 : F;
         }
         function circle(x,y,r,fill) {
